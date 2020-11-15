@@ -139,7 +139,7 @@ def set_success(state: GomokuState):
 if __name__ == "__main__":
     c_write=open("result_10_1.csv","a+",newline='')
     writer=csv.writer(c_write)
-    for i in range(1):
+    for i in range(10):
         rootNode = Node(random_put(initial_state()))
         # rootNode = Node(initial_state())
         rlist=[]
@@ -149,7 +149,7 @@ if __name__ == "__main__":
         final_Q = 0
         while not curNode.state.is_leaf():
             child = mcts(curNode)
-            final_Q = curNode.Q
+            final_Q = child.Q
             total += cal_processed_nodes(curNode)
             print(total)
             print("-----------------")
