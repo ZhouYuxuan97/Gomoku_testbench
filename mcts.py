@@ -163,6 +163,7 @@ if __name__ == "__main__":
         rlist.append(curNode.state.score_for_max_player())
         rlist.append(total)
         rlist.append(final_Q)
+        print(rlist)
         writer.writerow(rlist)
     # rootNode = Node(random_put(initial_state()))
     # curNode = rootNode
