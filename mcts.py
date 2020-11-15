@@ -125,31 +125,31 @@ def random_put(state):
                 count += 1
                 choice[count] = [i, j]
     random_pick = random.randint(1, count)
-    state.board[choice[random_pick][0]][choice[random_pick][1]] = 'X'
+    state.board[choice[random_pick][0]][choice[random_pick][1]] = 'O'
     return state
 
+
 def set_success(state: GomokuState):
-    # computer plays white
     choice = {}
     count = 0
     for i in range(5):
-        state.board[17-i][17-i] = 'O'
+        state.board[17 - i][17 - i] = 'O'
     return state
 
 if __name__ == "__main__":
-    c_write=open("result_10_1.csv","a+",newline='')
-    writer=csv.writer(c_write)
-    for i in range(10):
-        rootNode = Node(random_put(initial_state()))
+    c_write = open("result_18_2.csv", "a+", newline='')
+    writer = csv.writer(c_write)
+    for i in range(5):
+        rootNode = Node(initial_state())
         # rootNode = Node(initial_state())
-        rlist=[]
+        rlist = []
         curNode = rootNode
         print(curNode.state)
         total = 0
         final_Q = 0
         while not curNode.state.is_leaf():
             child = mcts(curNode)
-            final_Q = child.Q
+            final_Q = curNode.Q
             total += cal_processed_nodes(curNode)
             print(total)
             print("-----------------")
