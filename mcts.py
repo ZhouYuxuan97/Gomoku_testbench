@@ -115,7 +115,7 @@ def cal_processed_nodes(node):
     return count
 
 
-def random_put(state: GomokuState):
+def random_put(state):
     # computer plays white
     choice = {}
     count = 0
@@ -132,15 +132,13 @@ def set_success(state: GomokuState):
     # computer plays white
     choice = {}
     count = 0
-    for i in range(np.size(state.board, 0)):
-        state.board[i][0] = 'X'
+    for i in range(5):
+        state.board[17-i][17-i] = 'O'
     return state
 
 if __name__ == "__main__":
     c_write=open("result_10_1.csv","a+",newline='')
     writer=csv.writer(c_write)
-    count = 1
-
     for i in range(1):
         rootNode = Node(random_put(initial_state()))
         # rootNode = Node(initial_state())
@@ -148,21 +146,23 @@ if __name__ == "__main__":
         curNode = rootNode
         print(curNode.state)
         total = 0
+        final_Q = 0
         while not curNode.state.is_leaf():
             child = mcts(curNode)
+            final_Q = curNode.Q
             total += cal_processed_nodes(curNode)
             print(total)
             print("-----------------")
             print(child.state)
-            # curNode = Node(random_put(child.state))
-            curNode = child.choose_child()
+            curNode = Node(random_put(child.state))
+            # curNode = child.choose_child()
             print("-----------------")
             print(curNode.state)
 
         print("{} game finish, number of tree nodes processed is {}".format(i, total))
         rlist.append(curNode.state.score_for_max_player())
-        rlist.append(cal_processed_nodes(rootNode))
-        rlist.append(rootNode.Q)
+        rlist.append(total)
+        rlist.append(final_Q)
         writer.writerow(rlist)
     # rootNode = Node(random_put(initial_state()))
     # curNode = rootNode

@@ -13,8 +13,8 @@ class GomokuState(object):
         return (self.board == "_").sum() == 0
 
     def score_for_max_player(self):
-        for x in range(self.board.shape[0] - 5):
-            for y in range(self.board.shape[1] - 5):
+        for x in range(self.board.shape[0] - 4):
+            for y in range(self.board.shape[1] - 4):
                 for player, score in zip("XO", [+1, -1]):
                     subBoard = self.board[x:x + 5, y:y + 5]
                     if (subBoard == player).all(axis=0).any(): return score
@@ -44,7 +44,7 @@ class GomokuState(object):
         return new_state
 
 
-def initial_state(x=10, y=10):
+def initial_state(x=13, y=13):
     board = np.empty((x, y), dtype=str)
     board[:] = "_"
     return GomokuState(board)
