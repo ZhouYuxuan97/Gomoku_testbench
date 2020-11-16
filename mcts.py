@@ -65,18 +65,23 @@ def back_propagate(node, result):
 
 
 def mcts(node):
-    iterate = 1
+    # de-annotate the following lines if you wanna apply situation judgement
+    
+#     start = time.time()
+#     situation_judgment = situation_judgement(node)
+#     print("situation judgement cost", time.time()-start, "s.")
+#     if situation_judgment:
+#         return situation_judgment
+
     time_start = time.time()
     # start mcst
     while (time.time() - time_start < 20):
-        # print("\n======= iteration",iterate, "=======")
         selection_child = node.choose_child("uct")  # choose an unexpanded child using UCT
         expansion_child = selection_child.choose_child("random")  # expand the chosen child
         result = rollout(expansion_child)
         back_propagate(expansion_child, result)
 
         selection_child.expand = True
-        iterate += 1
 
     # choose a middle-most position among largest uct?
     # i = np.argmax([child.Q + np.sqrt(CONFIDENT * np.log(node.N+1) / (child.N + 1)) for child in node.children])
@@ -104,6 +109,88 @@ def mcts(node):
 
     return node.children[middle_most_i]
 
+def situation_judgement(node:Node):
+    situation = ""
+    for x in range(node.state.board.shape[0] - 4):
+        for y in range(node.state.board.shape[1] - 4):
+            subBoard = node.state.board[x:x + 5, y:y + 5]
+            subBoard_num = np.zeros((5,5))
+            for i in range(5):
+                for j in range(5):
+                    if subBoard[i][j] == "X":
+                        subBoard_num[i][j] = 1
+                    if subBoard[i][j] == "O":
+                        subBoard_num[i][j] = -1
+            # 1.AI have 4
+            # 1.1 Vertical
+            sum_axis0 = np.sum(subBoard_num, axis=0)
+            if (sum_axis0==4).any():
+                index_line = list(sum_axis0 == 4).index(True)
+                list_4 = list(subBoard[:,index_line])
+                index = list_4.index("_")
+                node.state.board[x+index][y+index_line] = "X"
+                situation = "VERTICAL 4"
+                return node
+            # 1.2 Horizontal
+            sum_axis1 = np.sum(subBoard_num, axis=1)
+            if (sum_axis1 == 4).any():
+                index_line = list(sum_axis1 == 4).index(True)
+                list_4 = list(subBoard[index_line])
+                index = list_4.index("_")
+                node.state.board[x+index_line][y+index] = "X"
+                situation = "HORIZONTAL 4"
+                return node
+            # 1.3 ↘Diagonal
+            list_diag = list(np.diag(subBoard))
+            if list_diag.count("X")==4 and "_" in list_diag:
+                index = list_diag.index("_")
+                node.state.board[x+index][y+index] = "X"
+                situation = "DIAGONAL 4"
+                return node
+            # 1.4 ↙Diagonal
+            list_diag = list(np.diag(np.rot90(subBoard)))
+            if list_diag.count("X") == 4 and "_" in list_diag:
+                index = list_diag.index("_")
+                node.state.board[x + index][y + 5 - index] = "X"
+                situation = "↙DIAGONAL 4"
+                return node
+
+            # 2.opponent has 4
+            # 2.1 Vertical
+            sum_axis0 = np.sum(subBoard_num, axis=0)
+            if (sum_axis0 == -4).any():
+                index_line = list(sum_axis0 == -4).index(True)
+                list_4 = list(subBoard[:, index_line])
+                index = list_4.index("_")
+                node.state.board[x + index][y+index_line] = "X"
+                situation = "OPPONENT VERTICAL 4"
+                return node
+            # 2.2 Horizontal
+            sum_axis1 = np.sum(subBoard_num, axis=1)
+            if (sum_axis1 == -4).any():
+                index_line = list(sum_axis1 == -4).index(True)
+                list_4 = list(subBoard[index_line])
+                index = list_4.index("_")
+                node.state.board[x+index_line][y + index] = "X"
+                situation = "OPPONENT HORIZONTAL 4"
+                return node
+            # 2.3 ↘Diagonal
+            list_diag = list(np.diag(subBoard))
+            if list_diag.count("X") == -4 and "_" in list_diag:
+                index = list_diag.index("_")
+                node.state.board[x + index][y + index] = "X"
+                situation = "OPPONENT ↘ 4"
+                return node
+            # 2.4 ↙Diagonal
+            list_diag = list(np.diag(np.rot90(subBoard)))
+            if list_diag.count("X") == -4 and "_" in list_diag:
+                index = list_diag.index("_")
+                node.state.board[x + index][y + 5 - index] = "X"
+                situation = "OPPONENT ↙ 4"
+                return node
+
+    # current board has no situations above
+    return None
 
 def cal_processed_nodes(node):
     count = 1
@@ -128,28 +215,29 @@ def random_put(state):
     state.board[choice[random_pick][0]][choice[random_pick][1]] = 'O'
     return state
 
-
 def set_success(state: GomokuState):
+    # computer plays white
     choice = {}
     count = 0
     for i in range(5):
-        state.board[17 - i][17 - i] = 'O'
+        state.board[17-i][17-i] = 'O'
     return state
 
+
 if __name__ == "__main__":
-    c_write = open("result_18_2.csv", "a+", newline='')
-    writer = csv.writer(c_write)
-    for i in range(5):
-        rootNode = Node(initial_state())
-        # rootNode = Node(initial_state())
-        rlist = []
+    c_write = open("result_10_3.csv", "a+", newline='')
+    writer=csv.writer(c_write)
+    # pass the game number you wanna run in range()
+    for i in range(10):
+        rootNode = Node(initial_state())    # by default the board is 10x10, you can pass any size like initial_state(15,20)
+        rlist=[]
         curNode = rootNode
         print(curNode.state)
         total = 0
         final_Q = 0
         while not curNode.state.is_leaf():
             child = mcts(curNode)
-            final_Q = curNode.Q
+            final_Q = child.Q
             total += cal_processed_nodes(curNode)
             print(total)
             print("-----------------")
@@ -163,7 +251,6 @@ if __name__ == "__main__":
         rlist.append(curNode.state.score_for_max_player())
         rlist.append(total)
         rlist.append(final_Q)
-        print(rlist)
         writer.writerow(rlist)
     # rootNode = Node(random_put(initial_state()))
     # curNode = rootNode
